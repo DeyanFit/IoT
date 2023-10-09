@@ -1,0 +1,28 @@
+FROM
+FROM <image>:<tag>
+FROM ubuntu
+FROM python
+
+WORKDIR /app
+
+ADD vs COPY
+COPY . /app
+ADD . /app
+
+ARG vs ENV
+ARG $username.{}
+ENV $username
+
+RUN
+RUN pip install flask
+
+EXPOSE
+EXPOSE 5000
+
+ENTRYPOINT vs CMD
+ENTRYPOINT python app.py
+CMD python app.py
+
+
+ENTRYPOINT python
+CMD app.py
