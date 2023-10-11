@@ -1,37 +1,38 @@
-from flask import Flask, jsonify
+from flask import Flask, render_template
+from markupsafe import Markup
 import psutil
-import datetime
 
 app = Flask(__name__)
 
-# Endpoint to get the time remaining until the battery runs out
-@app.route('/battery', methods=['GET'])
-def get_battery_time_remaining():
-    battery = psutil.sensors_battery()
-    if battery.power_plugged:
-        return "Charging"
-    else:
-        remaining_seconds = battery.secsleft
-        remaining_time = str(datetime.timedelta(seconds=remaining_seconds))
-        return remaining_time
+def convertTime(seconds):
+    minutes, seconds = divmod(seconds, 60)
+    hours, minutes = divmod(minutes, 60)
+    return "%d:%02d:%02d" % (hours, minutes, seconds)
 
-# Endpoint to get information about the current process
-@app.route('/process', methods=['GET'])
-def get_current_process_info():
-    current_process = psutil.Process()
-    process_info = {
-        "ID": current_process.pid,
-        "Name": current_process.name(),
-        "Status": current_process.status(),
-        "Started": datetime.datetime.fromtimestamp(current_process.create_time()).strftime('%Y-%m-%d %H:%M:%S')
-    }
-    return jsonify(process_info)
+battery = psutil.sensors_battery()
+process = psutil.Process()
+title=Markup('Use /battery, /process and /cpu to navigate.<br> Made by Deyan Atanasov')
 
-# Endpoint to get CPU usage for each CPU core
-@app.route('/cpu', methods=['GET'])
-def get_cpu_usage():
-    cpu_usage = psutil.cpu_percent(interval=1, percpu=True)
-    return jsonify(cpu_usage)
+print("Battery left: ", battery.secsleft)
+print("Process: ", process)
+print("CPU cores util: ", psutil.cpu_percent(interval=None, percpu=True))
 
-if __name__ == '__main__':
-    app.run(debug=True)
+@app.route("/")
+def func():
+    return render_template("index.html", text=title)
+
+@app.route("/battery", methods=["GET"])
+def bat():
+    return render_template("index1.html", batteryInfo="Baterry percentage and time left: " + str(battery.percent) + "%, " + str(convertTime(battery.secsleft)))
+
+@app.route("/process", methods=["GET"])
+def proc():
+    return render_template("index2.html", processInfo="Current process, PID, name, status and time started: " + str(process))
+
+@app.route("/cpu", methods=["GET"])
+def cpu():
+    return render_template("index3.html", cpuInfo="Cpu usage in % for all cores:" + str(psutil.cpu_percent(interval=None, percpu=True)))
+
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5000)
